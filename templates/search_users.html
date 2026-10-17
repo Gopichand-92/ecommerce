@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Search Users</title>
+
+    <style>
+
+        body {
+            margin: 0;
+            padding: 40px;
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px #ccc;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th {
+            background-color: #333;
+            color: white;
+            padding: 12px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>Search Users</h1>
+
+
+    <input
+        type="text"
+        id="searchUsername"
+        class="search-box"
+        placeholder="Enter username or any letter..."
+    >
+
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+            </tr>
+
+        </thead>
+
+
+        <tbody id="searchResults">
+
+        </tbody>
+
+    </table>
+
+
+    <p id="message" class="message"></p>
+
+</div>
+
+
+<script>
+
+const searchInput =
+    document.getElementById("searchUsername");
+
+const table =
+    document.getElementById("searchResults");
+
+const message =
+    document.getElementById("message");
+
+
+let searchNumber = 0;
+
+
+searchInput.addEventListener("input", searchUsers);
+
+
+async function searchUsers() {
+
+    const username =
+        searchInput.value.trim();
+
+
+    // Clear old results
+    table.innerHTML = "";
+
+    message.innerHTML = "";
+
+
+    // If search box is empty
+    if (username === "") {
+        return;
+    }
+
+
+    // Create a new search number
+    searchNumber++;
+
+    const currentSearch =
+        searchNumber;
+
+
+    try {
+
+        const response = await fetch(
+            "/search_users?username=" +
+            encodeURIComponent(username)
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP error: " + response.status
+            );
+
+        }
+
+
+        const users = await response.json();
+
+
+        console.log("Search result:", users);
+
+
+        // Ignore old search results
+        if (currentSearch !== searchNumber) {
+            return;
+        }
+
+
+        // No users found
+        if (users.length === 0) {
+
+            message.innerHTML =
+                "No users found";
+
+            return;
+        }
+
+
+        // Display users
+        users.forEach(function(user) {
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+                <td>${user.id}</td>
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+            `;
+
+
+            table.appendChild(row);
+
+        });
+
+    }
+    catch (error) {
+
+        console.error(
+            "Search error:",
+            error
+        );
+
+        message.innerHTML =
+            "Error while searching users";
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>

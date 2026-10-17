@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecommerce | Premium Shopping</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: radial-gradient(circle at top, #302b22, #0c0c0c 75%);
+            color: #f5f2eb;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            padding: 20px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111;
+            border-bottom: 1px solid #333;
+        }
+
+        .logo {
+            font-family: Georgia, serif;
+            font-size: 27px;
+            letter-spacing: 3px;
+            color: #f4e6c1;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            color: #ddd;
+            text-decoration: none;
+        }
+
+        .hero {
+            width: 90%;
+            max-width: 1200px;
+            margin: auto;
+            padding-top: 65px;
+            text-align: center;
+        }
+
+        .small-heading {
+            color: #c6a35c;
+            letter-spacing: 5px;
+            margin-bottom: 18px;
+        }
+
+        .hero h1 {
+            font-family: Georgia, serif;
+            font-size: clamp(40px, 6vw, 75px);
+            font-weight: normal;
+        }
+
+        .hero h1 span {
+            color: #d7b66a;
+            font-style: italic;
+        }
+
+        .hero-description {
+            max-width: 650px;
+            margin: 20px auto 30px;
+            color: #aaa;
+            line-height: 1.8;
+        }
+
+        .search-wrapper {
+            max-width: 800px;
+            margin: auto;
+            display: flex;
+            gap: 8px;
+            padding: 6px;
+            border: 1px solid #594b2c;
+            border-radius: 12px;
+        }
+
+        .search-wrapper input {
+            flex: 1;
+            min-width: 0;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 15px;
+            color: white;
+            font-size: 15px;
+        }
+
+        .search-wrapper input::placeholder {
+            color: #999;
+        }
+
+        .search-button,
+        .view-all {
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #e3c37b, #b99345);
+            color: #111;
+            padding: 14px 22px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .categories {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .category-btn {
+            background: #191816;
+            color: #ccc;
+            border: 1px solid #444;
+            padding: 11px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+
+        .category-btn.active {
+            background: #dcb970;
+            color: #111;
+            font-weight: bold;
+        }
+
+        .main-container {
+            width: 90%;
+            max-width: 1500px;
+            margin: 80px auto;
+        }
+
+        .collection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .collection-title {
+            font: normal 38px Georgia, serif;
+        }
+
+        .collection-title span {
+            color: #d3b264;
+        }
+
+        .product-count {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 25px;
+        }
+
+        .product-card {
+            background: linear-gradient(145deg, #22211f, #141414);
+            border: 1px solid #333;
+            border-radius: 18px;
+            overflow: hidden;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            border-color: #c6a35c;
+        }
+
+        .product-image {
+            height: 260px;
+            background: #1c1b19;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 20px;
+        }
+
+        .offer-badge {
+            position: absolute;
+            z-index: 1;
+            top: 12px;
+            left: 12px;
+            background: #d8b76b;
+            color: #111;
+            padding: 7px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .product-info {
+            padding: 20px;
+        }
+
+        .product-category {
+            color: #c6a35c;
+            font-size: 11px;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .product-name {
+            font: 22px Georgia, serif;
+            margin-bottom: 10px;
+        }
+
+        .product-description {
+            color: #999;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            min-height: 40px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .price {
+            color: #e0c27a;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .product-id {
+            color: #777;
+            font-size: 11px;
+        }
+
+        .color-count {
+            color: #c6a35c;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 14px;
+        }
+
+        .offers {
+            margin-bottom: 18px;
+        }
+
+        .offers-title {
+            color: #c6a35c;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .offer-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 9px;
+            margin-bottom: 6px;
+            border-radius: 7px;
+            background: #29251b;
+            border: 1px solid #40351e;
+        }
+
+        .offer-type,
+        .discount {
+            font-size: 12px;
+        }
+
+        .discount {
+            color: #e0c27a;
+            font-weight: bold;
+        }
+
+        .buy-now,
+        .view-details {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .view-details {
+            margin-bottom: 8px;
+            border: 1px solid #c6a35c;
+            background: transparent;
+            color: #e0c27a;
+        }
+
+        .view-details:hover {
+            background: #29251b;
+        }
+
+        .buy-now {
+            border: none;
+            background: linear-gradient(135deg, #e0c079, #b08b44);
+            color: #111;
+        }
+
+        #message {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+            color: #aaa;
+        }
+
+        #message h2 {
+            color: white;
+            margin-bottom: 12px;
+        }
+
+        .view-all {
+            margin-top: 20px;
+        }
+
+        footer {
+            border-top: 1px solid #333;
+            padding: 40px;
+            text-align: center;
+            color: #888;
+            margin-top: 80px;
+        }
+
+        footer .footer-logo {
+            color: #d5b46a;
+            font: 22px Georgia, serif;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 1100px) {
+            .products-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 800px) {
+            .products-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .nav-links {
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-wrapper {
+                flex-direction: column;
+            }
+
+            .search-button {
+                width: 100%;
+            }
+
+            .collection-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .nav-links a {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="logo">Ecommerce</div>
+
+    <div class="nav-links">
+        <a href="#">Home</a>
+        <a href="#products">Collections</a>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="small-heading">CURATED COLLECTION</div>
+
+    <h1>Find Your <span>Perfect</span><br>Everyday Luxury.</h1>
+
+    <p class="hero-description">
+        Explore fashion, technology, lifestyle and more.
+        Discover quality products, all in one place.
+    </p>
+
+    <div class="search-wrapper">
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search products "
+            onkeydown="if(event.key === 'Enter') performSearch()">
+
+        <button class="search-button" onclick="performSearch()">
+            Search
+        </button>
+    </div>
+
+    <div class="categories">
+        <button class="category-btn"
+                onclick="selectCategory('Clothes', this)">Clothes</button>
+
+        <button class="category-btn"
+                onclick="selectCategory('Shoes', this)">Shoes</button>
+
+        <button class="category-btn"
+                onclick="selectCategory('Electronics', this)">Electronics</button>
+
+        <button class="category-btn"
+                onclick="selectCategory('Books', this)">Books</button>
+
+        <button class="category-btn"
+                onclick="selectCategory('Beauty', this)">Beauty</button>
+
+        <button class="category-btn"
+                onclick="selectCategory('Home', this)">Home</button>
+
+        <button class="category-btn"
+                onclick="selectCategory('Accessories', this)">Accessories</button>
+
+        <button class="category-btn"
+                onclick="selectCategory('Sports', this)">Sports</button>
+    </div>
+</section>
+
+<main class="main-container" id="products">
+    <div class="collection-header">
+        <h2 class="collection-title">Our <span>Collection</span></h2>
+        <div class="product-count" id="productCount">Loading products...</div>
+    </div>
+
+    <div class="products-grid" id="productsGrid"></div>
+
+    <div id="message">
+        <h2>No products found</h2>
+        <p>Try another product name or maximum price.</p>
+
+        <button class="view-all" onclick="resetProducts()">
+            View Products
+        </button>
+    </div>
+</main>
+
+<footer>
+    <div class="footer-logo">Ecommerce.</div>
+    <p>Quality products. Thoughtfully curated.</p>
+    <br>
+    <p>&copy; 2026 Ecommerce. All rights reserved.</p>
+</footer>
+
+<script>
+    let selectedCategory = "";
+    let currentSearchText = "";
+    let currentMaxPrice = 1000000;
+
+    async function loadProducts(
+        category = selectedCategory,
+        maxPrice = currentMaxPrice,
+        searchText = currentSearchText
+    ) {
+        selectedCategory = category;
+        currentMaxPrice = maxPrice;
+        currentSearchText = searchText;
+
+        const grid = document.getElementById("productsGrid");
+        const message = document.getElementById("message");
+        const productCount = document.getElementById("productCount");
+
+        grid.innerHTML = "";
+        message.style.display = "none";
+        productCount.textContent = "Loading products...";
+
+        try {
+            const params = new URLSearchParams({
+                category: category,
+                max_price: maxPrice,
+                search: searchText
+            });
+
+            const response = await fetch(
+                `/products_with_offers?${params.toString()}`
+            );
+
+            if (!response.ok) {
+                throw new Error("Products API returned " + response.status);
+            }
+
+            const products = await response.json();
+
+            productCount.textContent =
+                products.length +
+                (products.length === 1
+                    ? " product found"
+                    : " products found");
+
+            if (products.length === 0) {
+                message.style.display = "block";
+                return;
+            }
+
+            products.forEach(product => createProductCard(product));
+
+        } catch (error) {
+            console.error("Error loading products:", error);
+            productCount.textContent = "Unable to load products";
+            message.style.display = "block";
+        }
+    }
+
+    function selectCategory(category, button) {
+        document.querySelectorAll(".category-btn").forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+        button.classList.add("active");
+
+        document.getElementById("searchInput").value = "";
+
+        loadProducts(category, 1000000, "");
+    }
+
+    function performSearch() {
+        const input = document.getElementById("searchInput")
+            .value.trim();
+
+        if (!input) {
+            loadProducts(selectedCategory, 1000000, "");
+            return;
+        }
+
+        let searchText = input;
+        let maxPrice = 1000000;
+
+        // Supports: under 30000, below 100000, less than 50000
+        const pricePattern =
+            /\b(?:under|below|less\s+than)\s*₹?\s*([\d,]+)/i;
+
+        const priceMatch = input.match(pricePattern);
+
+        if (priceMatch) {
+            maxPrice = Number(priceMatch[1].replace(/,/g, ""));
+
+            if (!Number.isFinite(maxPrice) || maxPrice < 0) {
+                alert("Please enter a valid maximum price.");
+                return;
+            }
+
+            searchText = input.replace(pricePattern, "").trim();
+        }
+
+        // Search across categories when a product name is entered.
+        document.querySelectorAll(".category-btn").forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+        loadProducts("", maxPrice, searchText);
+    }
+
+    function resetProducts() {
+        document.getElementById("searchInput").value = "";
+
+        document.querySelectorAll(".category-btn").forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+        selectedCategory = "";
+        loadProducts("", 1000000, "");
+    }
+
+    function createProductCard(product) {
+        const grid = document.getElementById("productsGrid");
+        const card = document.createElement("div");
+
+        card.className = "product-card";
+        card.setAttribute("tabindex", "0");
+        card.setAttribute("role", "link");
+        card.setAttribute(
+            "aria-label",
+            "View details for " + (product.name || "product")
+        );
+
+        const offers = Array.isArray(product.offers)
+            ? product.offers
+            : [];
+
+        let offersHtml = "";
+
+        if (offers.length > 0) {
+            offersHtml = `
+                <div class="offers">
+                    <div class="offers-title">Available Offers</div>
+
+                    ${offers.map(offer => `
+                        <div class="offer-item">
+                            <span class="offer-type">
+                                ${escapeHtml(offer.offer_type || "")}
+                            </span>
+
+                            <span class="discount">
+                                ₹${Number(offer.discount_amount || 0)
+                                    .toLocaleString("en-IN")} OFF
+                            </span>
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+        } else {
+            offersHtml = `
+                <div class="offers">
+                    <div class="offers-title">Available Offers</div>
+                    <div class="offer-item">
+                        <span class="offer-type">No offers available</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        card.innerHTML = `
+            <div class="product-image">
+                ${offers.length > 0
+                    ? '<div class="offer-badge">OFFER</div>'
+                    : ""}
+
+                <img
+                    src="${escapeHtml(product.image || "")}"
+                    alt="${escapeHtml(product.name || "Product")}"
+                    onerror="this.onerror=null; this.src='https://placehold.co/400x400?text=No+Image';">
+            </div>
+
+            <div class="product-info">
+                <div class="product-category">Product</div>
+
+                <div class="product-name">
+                    ${escapeHtml(product.name || "Unnamed product")}
+                </div>
+
+                <div class="product-description">
+                    ${escapeHtml(product.description || "")}
+                </div>
+
+                <div class="price-row">
+                    <div class="price">
+                        ₹${Number(product.price || 0).toLocaleString("en-IN")}
+                    </div>
+
+                    <div class="product-id">
+                        ID #${escapeHtml(product.id)}
+                    </div>
+                </div>
+
+                <div class="color-count" id="color-count-${Number(product.id)}">
+                    Colors: Loading...
+                </div>
+
+                ${offersHtml}
+
+                <button type="button" class="view-details">
+                    View Details
+                </button>
+
+                <button type="button" class="buy-now">
+                    Buy Now
+                </button>
+            </div>
+        `;
+
+        // Clicking the card opens the selected product's details page.
+        card.addEventListener("click", function (event) {
+            if (event.target.closest("button")) {
+                return;
+            }
+
+            viewProduct(product.id);
+        });
+
+        card.addEventListener("keydown", function (event) {
+            if (event.target !== card) return;
+
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                viewProduct(product.id);
+            }
+        });
+
+        card.querySelector(".view-details").addEventListener("click", function () {
+            viewProduct(product.id);
+        });
+
+        card.querySelector(".buy-now").addEventListener("click", function () {
+            buyNow(product.name);
+        });
+
+        grid.appendChild(card);
+
+        loadColorCount(product.id);
+    }
+
+    async function loadColorCount(productId) {
+        const countElement = document.getElementById(
+            `color-count-${Number(productId)}`
+        );
+
+        if (!countElement) return;
+
+        try {
+            const response = await fetch(
+                "/colors?product_id=" + encodeURIComponent(productId)
+            );
+
+            if (!response.ok) {
+                throw new Error("Colors API returned " + response.status);
+            }
+
+            const data = await response.json();
+            const count = data.count ?? data.colors?.count ?? 0;
+
+            countElement.textContent = `Colors: ${Number(count) || 0}`;
+
+        } catch (error) {
+            console.error(
+                "Error loading colors for product " + productId,
+                error
+            );
+
+            countElement.textContent = "Colors: unavailable";
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[character]);
+    }
+
+    function viewProduct(productId) {
+        if (!productId || !Number.isFinite(Number(productId))) {
+            alert("Product ID is missing or invalid.");
+            return;
+        }
+
+        window.location.href =
+            "/product-details?product_id=" +
+            encodeURIComponent(productId);
+    }
+
+    function buyNow(productName) {
+        alert("Buy Now selected for " + productName);
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Load all categories initially.
+        loadProducts("", 1000000, "");
+    });
+</script>
+
+</body>
+</html>

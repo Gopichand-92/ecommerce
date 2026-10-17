@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Users</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            padding: 40px;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background-color: #333;
+            color: white;
+            padding: 12px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .edit-button {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .delete-button {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>Users List</h1>
+
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+
+                <th>Username</th>
+
+                <th>Email</th>
+
+                <th>Edit</th>
+
+                <th>Delete</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody id="usersTable">
+
+        </tbody>
+
+    </table>
+
+</div>
+
+
+<script>
+
+
+// --------------------------------------------------
+// Get all users
+// --------------------------------------------------
+
+async function loadUsers() {
+
+    try {
+
+        const response = await fetch(
+            "/all_users"
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP error: " + response.status
+            );
+
+        }
+
+
+        const users = await response.json();
+
+
+        console.log(
+            "API response:",
+            users
+        );
+
+
+        const table =
+            document.getElementById("usersTable");
+
+
+        // Clear old table data
+
+        table.innerHTML = "";
+
+
+        // Display every user
+
+        users.forEach(function(user) {
+
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+
+                <td>${user.id}</td>
+
+                <td>${user.name}</td>
+
+                <td>${user.email}</td>
+
+                <td>
+
+                    <button
+                        class="edit-button"
+                        onclick="editUser('${user.name}')">
+
+                        Edit
+
+                    </button>
+
+                </td>
+
+                <td>
+
+                    <button
+                        class="delete-button"
+                        onclick="deleteUser('${user.name}')">
+
+                        Delete
+
+                    </button>
+
+                </td>
+
+            `;
+
+
+            table.appendChild(row);
+
+        });
+
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error loading users:",
+            error
+        );
+
+    }
+
+}
+
+
+
+// --------------------------------------------------
+// Edit user
+// --------------------------------------------------
+
+async function editUser(oldUsername) {
+
+
+    // Ask the user for new username
+
+    const newUsername =
+        prompt(
+            "Enter new username:",
+            oldUsername
+        );
+
+
+    // If user clicks Cancel
+
+    if (newUsername === null) {
+
+        return;
+
+    }
+
+
+    // Remove extra spaces
+
+    const username =
+        newUsername.trim();
+
+
+    // Check empty username
+
+    if (username === "") {
+
+        alert(
+            "Username cannot be empty"
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+
+        // Call PUT API
+
+        const response =
+            await fetch(
+                "/update_username",
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        user_name:
+                            oldUsername,
+
+                        new_username:
+                            username
+
+                    })
+
+                }
+            );
+
+
+        // Get response from Flask
+
+        const result =
+            await response.text();
+
+
+        console.log(
+            "Update response:",
+            result
+        );
+
+
+        alert(result);
+
+
+        // If update was successful
+
+        if (response.ok) {
+
+            loadUsers();
+
+        }
+
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error updating user:",
+            error
+        );
+
+        alert(
+            "Error while updating user"
+        );
+
+    }
+
+}
+
+
+
+// --------------------------------------------------
+// Delete user
+// --------------------------------------------------
+
+async function deleteUser(username) {
+
+
+    // Ask for confirmation
+
+    const confirmDelete =
+        confirm(
+            "Are you sure you want to delete " +
+            username +
+            "?"
+        );
+
+
+    // If user clicks Cancel
+
+    if (!confirmDelete) {
+
+        return;
+
+    }
+
+
+    try {
+
+
+        // Call DELETE API
+
+        const response =
+            await fetch(
+                "/delete_username",
+                {
+                    method: "DELETE",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        user_name:
+                            username
+
+                    })
+
+                }
+            );
+
+
+        // Get response from Flask
+
+        const result =
+            await response.text();
+
+
+        console.log(
+            "Delete response:",
+            result
+        );
+
+
+        alert(result);
+
+
+        // If deletion was successful
+
+        if (response.ok) {
+
+            loadUsers();
+
+        }
+
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error deleting user:",
+            error
+        );
+
+        alert(
+            "Error while deleting user"
+        );
+
+    }
+
+}
+
+
+
+// --------------------------------------------------
+// Load users when page opens
+// --------------------------------------------------
+
+loadUsers();
+
+
+</script>
+
+</body>
+
+</html>
