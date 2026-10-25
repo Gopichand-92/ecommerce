@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,6 +80,62 @@
             margin-bottom: 15px;
         }
 
+        .cart-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 25px;
+            max-width: 350px;
+        }
+
+        .cart-controls label {
+            color: #ccc;
+        }
+
+        .cart-controls select {
+            width: 100%;
+            padding: 12px;
+            background: #242424;
+            color: white;
+            border: 1px solid #888;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .cart-controls button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 25px;
+            color: #111;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .add-cart-btn {
+            background: #ffcc00;
+        }
+
+        .add-cart-btn:hover {
+            background: #f2bd00;
+        }
+
+        .buy-now-btn {
+            background: #ff9900;
+        }
+
+        .buy-now-btn:hover {
+            background: #ee8800;
+        }
+
+        .cart-message {
+            margin-top: 10px;
+            line-height: 1.5;
+            color: #8fdb9a;
+            overflow-wrap: anywhere;
+        }
+
         .section {
             margin-top: 30px;
         }
@@ -89,13 +146,15 @@
             margin-bottom: 15px;
         }
 
-        .color-list, .offer-list {
+        .color-list,
+        .offer-list {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
         }
 
-        .color-item, .offer-item {
+        .color-item,
+        .offer-item {
             background: #242424;
             border: 1px solid #51442b;
             border-radius: 8px;
@@ -153,6 +212,7 @@
 <body>
     <header>
         <h2>PREMIUM SHOPPING</h2>
+
         <a class="back-btn" href="/search_products_page">
             ← Back to Products
         </a>
@@ -215,8 +275,7 @@
         function displayOffers(offers) {
             const allOffers = Array.isArray(offers) ? offers : [];
 
-            offerCount.textContent =
-                "Total Offers: " + allOffers.length;
+            offerCount.textContent = "Total Offers: " + allOffers.length;
 
             if (allOffers.length === 0) {
                 offerList.innerHTML =
@@ -226,9 +285,7 @@
 
             offerList.innerHTML = allOffers.map(offer => `
                 <div class="offer-item">
-                    <h3>
-                        ${escapeHtml(offer.offer_type || "Offer")}
-                    </h3>
+                    <h3>${escapeHtml(offer.offer_type || "Offer")}</h3>
 
                     <p>
                         Discount:
@@ -236,16 +293,64 @@
                     </p>
 
                     <p class="discount">
-                        You save:
-                        ${formatPrice(offer.discount_amount)}
+                        You save: ${formatPrice(offer.discount_amount)}
                     </p>
                 </div>
             `).join("");
         }
 
+        async function addToCart() {
+            const quantity = Number(
+                document.getElementById("quantity").value
+            );
+
+            const messageElement = document.getElementById("cartMessage");
+            const button = document.getElementById("addCartButton");
+
+            button.disabled = true;
+            button.textContent = "Adding...";
+            messageElement.textContent = "";
+
+            try {
+                const response = await fetch("/product-details", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        product_id: Number(productId),
+                        quantity: quantity
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.error || "Failed to add product to cart."
+                    );
+                }
+
+                messageElement.textContent =
+                    data.message || "Product added to cart successfully.";
+
+            } catch (error) {
+                messageElement.textContent = error.message;
+            } finally {
+                button.disabled = false;
+                button.textContent = "Add to Cart";
+            }
+        }
+
+        function buyNow() {
+            alert("Buy Now / checkout functionality is not connected yet.");
+        }
+
         async function loadProductDetails() {
-            if (!productId) {
-                statusElement.textContent = "Product ID is missing.";
+            if (!productId ||
+                !Number.isInteger(Number(productId)) ||
+                Number(productId) < 1) {
+                statusElement.textContent = "Valid product ID is required.";
                 offerCount.textContent = "Total Offers: 0";
                 offerList.innerHTML = "";
                 return;
@@ -287,9 +392,7 @@
                                 ${escapeHtml(product.category || "Not specified")}
                             </p>
 
-                            <p class="price">
-                                ${formatPrice(product.price)}
-                            </p>
+                            <p class="price">${formatPrice(product.price)}</p>
 
                             <p class="description">
                                 ${escapeHtml(
@@ -297,11 +400,39 @@
                                     "No description available."
                                 )}
                             </p>
+
+                            <div class="cart-controls">
+                                <label for="quantity">Quantity:</label>
+
+                                <select id="quantity">
+                                    ${Array.from({ length: 10 }, (_, i) =>
+                                        `<option value="${i + 1}">${i + 1}</option>`
+                                    ).join("")}
+                                </select>
+
+                                <button
+                                    type="button"
+                                    id="addCartButton"
+                                    class="add-cart-btn"
+                                    onclick="addToCart()"
+                                >
+                                    Add to Cart
+                                </button>
+
+                                <p id="cartMessage" class="cart-message"></p>
+
+                                <button
+                                    type="button"
+                                    class="buy-now-btn"
+                                    onclick="buyNow()"
+                                >
+                                    Buy Now
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
 
-                // Display all colors.
                 const colors = Array.isArray(product.colors)
                     ? product.colors
                     : (product.colors?.items || []);
@@ -312,24 +443,22 @@
                         : color.color_name
                 ).filter(Boolean);
 
-                colorCount.textContent =
-                    "Total Colors: " + colorNames.length;
+                colorCount.textContent = "Total Colors: " + colorNames.length;
 
                 colorList.innerHTML = colorNames.length
                     ? colorNames.map(color => `
-                        <div class="color-item">
-                            ${escapeHtml(color)}
-                        </div>
+                        <div class="color-item">${escapeHtml(color)}</div>
                     `).join("")
                     : "<p>No colors available.</p>";
 
-                // Display the count and details of every offer.
                 displayOffers(product.offers);
 
             } catch (error) {
                 statusElement.textContent = error.message;
                 offerCount.textContent = "Total Offers: 0";
                 offerList.innerHTML = "";
+                colorCount.textContent = "Total Colors: 0";
+                colorList.innerHTML = "";
             }
         }
 

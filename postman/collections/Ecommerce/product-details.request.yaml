@@ -1,0 +1,13 @@
+$kind: http-request
+url: http://127.0.0.1:5000/product-details
+method: GET
+body:
+  type: json
+  content: "{\r
+
+    \    \"product_id\": 4,\r
+
+    \    \"quantity\": 2\r
+
+    }"
+order: 1000
