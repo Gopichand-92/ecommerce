@@ -1,9 +1,9 @@
-from dao import product_dao
+from repositories import product_repository
 
 
 def get_products_with_offers(search_text, category_name, max_price):
 
-    rows = product_dao.get_products_with_offers(
+    rows = product_repository.get_products_with_offers(
         search_text,
         category_name,
         max_price

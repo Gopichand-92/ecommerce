@@ -1,8 +1,7 @@
 
 from flask import Flask, jsonify, request, render_template
-
 from controllers.product_colors_controller import get_colors
-from dao import product_dao
+from repositories import product_repository
 from service import product_service
 from service.product_details_service import get_product_details
 from controllers.cart_controller import (add_to_cart,get_cart,update_cart_item,remove_cart_item)

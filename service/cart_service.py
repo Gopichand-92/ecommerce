@@ -1,5 +1,5 @@
 
-from dao.cart_dao import (
+from repositories.cart_repository import (
     get_cart_item,
     insert_cart_item,
     update_cart_quantity,

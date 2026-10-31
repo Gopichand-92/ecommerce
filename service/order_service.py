@@ -1,5 +1,5 @@
 
-import dao.order_dao as order_dao
+import repositories.order_repository as order_repository
 
 
 # ==========================================
@@ -9,7 +9,7 @@ import dao.order_dao as order_dao
 def get_checkout(user_id):
 
     # Fetch products from the user's cart using DAO
-    cart_items = order_dao.get_checkout_items(user_id)
+    cart_items = order_repository.get_checkout_items(user_id)
 
     # Check whether the cart contains products
     if not cart_items:
@@ -55,7 +55,7 @@ def place_order(user_id, delivery_address, payment_method):
     payment_status = "Pending"
 
     # Get database connection from DAO
-    conn = order_dao.get_connection()
+    conn = order_repository.get_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
@@ -64,7 +64,7 @@ def place_order(user_id, delivery_address, payment_method):
         conn.start_transaction()
 
         # Fetch products from the user's cart
-        cart_items = order_dao.get_checkout_items(user_id)
+        cart_items = order_repository.get_checkout_items(user_id)
 
         # Check whether cart is empty
         if not cart_items:
@@ -77,7 +77,7 @@ def place_order(user_id, delivery_address, payment_method):
         )
 
         # Insert order information into orders table
-        order_id = order_dao.insert_order(
+        order_id = order_repository.insert_order(
             cursor,
             user_id,
             round(total_amount, 2),
@@ -89,14 +89,14 @@ def place_order(user_id, delivery_address, payment_method):
         # Insert each purchased product into order_items table
         for item in cart_items:
 
-            order_dao.insert_order_item(
+            order_repository.insert_order_item(
                 cursor,
                 order_id,
                 item
             )
 
         # Remove purchased products from cart_item table
-        order_dao.delete_cart_items(cursor, user_id)
+        order_repository.delete_cart_items(cursor, user_id)
 
         # Save all database changes
         conn.commit()
@@ -132,7 +132,7 @@ def place_order(user_id, delivery_address, payment_method):
 def get_user_orders(user_id):
 
     # Fetch all orders belonging to the user
-    orders = order_dao.get_user_orders(user_id)
+    orders = order_repository.get_user_orders(user_id)
 
     # Check whether the user has any orders
     if not orders:
@@ -156,7 +156,7 @@ def get_user_orders(user_id):
 def get_order_details(order_id, user_id):
 
     # Fetch products belonging to the selected order
-    order_items = order_dao.get_order_details(
+    order_items = order_repository.get_order_details(
         order_id,
         user_id
     )
@@ -195,7 +195,7 @@ def cancel_order(order_id, user_id):
         raise ValueError("Order ID and User ID must be positive")
 
     # Cancel the order using DAO
-    result = order_dao.cancel_order(order_id, user_id)
+    result = order_repository.cancel_order(order_id, user_id)
 
     # Check whether an order was updated
     if result == 0:

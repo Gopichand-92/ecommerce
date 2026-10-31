@@ -1,4 +1,4 @@
-from dao.product_colors_dao import get_colors as get_product_colors
+from repositories.product_colors_repository import get_colors as get_product_colors
 
 
 def get_colors(product_id):
