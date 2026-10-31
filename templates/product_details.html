@@ -1,9 +1,11 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Product Details | Premium Shopping</title>
 
     <style>
@@ -113,6 +115,11 @@
             cursor: pointer;
         }
 
+        .cart-controls button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .add-cart-btn {
             background: #ffcc00;
         }
@@ -210,6 +217,7 @@
 </head>
 
 <body>
+
     <header>
         <h2>PREMIUM SHOPPING</h2>
 
@@ -219,30 +227,42 @@
     </header>
 
     <main class="container">
+
         <p id="status" class="status">Loading product details...</p>
 
         <div id="productDetails"></div>
 
         <section class="section">
             <h2>Available Colors</h2>
+
             <p id="colorCount">Loading colors...</p>
+
             <div id="colorList" class="color-list"></div>
         </section>
 
         <section class="section">
             <h2>Available Offers</h2>
+
             <p id="offerCount" class="offer-count">
                 Total Offers: Loading...
             </p>
+
             <div id="offerList" class="offer-list"></div>
         </section>
+
     </main>
 
     <script>
+
+        // Get product ID from the URL
         const productId = new URLSearchParams(
             window.location.search
         ).get("product_id");
 
+        // Current testing user ID
+        const userId = 2;
+
+        // Get HTML elements
         const productDetails = document.getElementById("productDetails");
         const statusElement = document.getElementById("status");
         const colorCount = document.getElementById("colorCount");
@@ -250,8 +270,12 @@
         const offerCount = document.getElementById("offerCount");
         const offerList = document.getElementById("offerList");
 
+
+        // Escape HTML values before displaying API data
         function escapeHtml(value) {
+
             return String(value ?? "").replace(/[&<>"']/g, function(char) {
+
                 return {
                     "&": "&amp;",
                     "<": "&lt;",
@@ -259,10 +283,14 @@
                     '"': "&quot;",
                     "'": "&#039;"
                 }[char];
+
             });
         }
 
+
+        // Format product prices
         function formatPrice(value) {
+
             const amount = Number(value);
 
             return Number.isFinite(amount)
@@ -272,19 +300,26 @@
                 : "Price unavailable";
         }
 
+
+        // Display available product offers
         function displayOffers(offers) {
+
             const allOffers = Array.isArray(offers) ? offers : [];
 
             offerCount.textContent = "Total Offers: " + allOffers.length;
 
             if (allOffers.length === 0) {
+
                 offerList.innerHTML =
                     "<p>No offers available for this product.</p>";
+
                 return;
             }
 
             offerList.innerHTML = allOffers.map(offer => `
+
                 <div class="offer-item">
+
                     <h3>${escapeHtml(offer.offer_type || "Offer")}</h3>
 
                     <p>
@@ -295,96 +330,167 @@
                     <p class="discount">
                         You save: ${formatPrice(offer.discount_amount)}
                     </p>
+
                 </div>
+
             `).join("");
         }
 
-        async function addToCart() {
-            const quantity = Number(
-                document.getElementById("quantity").value
-            );
 
+        // Add selected product and quantity to cart
+        async function addToCart(redirectToCheckout = false) {
+
+            const quantityElement = document.getElementById("quantity");
             const messageElement = document.getElementById("cartMessage");
-            const button = document.getElementById("addCartButton");
+            const addButton = document.getElementById("addCartButton");
+            const buyButton = document.getElementById("buyNowButton");
 
-            button.disabled = true;
-            button.textContent = "Adding...";
+            const quantity = Number(quantityElement.value);
+
+            if (!Number.isInteger(quantity) || quantity < 1) {
+
+                messageElement.textContent = "Please select a valid quantity.";
+
+                return;
+            }
+
+            // Disable buttons while the request is processing
+            addButton.disabled = true;
+            buyButton.disabled = true;
+
+            addButton.textContent = "Adding...";
             messageElement.textContent = "";
 
             try {
-                const response = await fetch("/product-details", {
+
+                // Call the existing Add to Cart API
+                const response = await fetch("/add_to_cart", {
+
                     method: "POST",
+
                     headers: {
                         "Content-Type": "application/json"
                     },
+
                     body: JSON.stringify({
+
+                        user_id: userId,
                         product_id: Number(productId),
                         quantity: quantity
+
                     })
+
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
+
                     throw new Error(
-                        data.error || "Failed to add product to cart."
+                        data.message ||
+                        data.error ||
+                        "Failed to add product to cart."
                     );
                 }
 
+                // Display success message
                 messageElement.textContent =
                     data.message || "Product added to cart successfully.";
 
+                // Redirect based on the clicked button
+                if (redirectToCheckout) {
+
+                    window.location.href = `/checkout/${userId}`;
+
+                } else {
+
+                    window.location.href = '/cart';
+
+                }
+
             } catch (error) {
+
                 messageElement.textContent = error.message;
+
             } finally {
-                button.disabled = false;
-                button.textContent = "Add to Cart";
+
+                addButton.disabled = false;
+                buyButton.disabled = false;
+
+                addButton.textContent = "Add to Cart";
             }
         }
 
+
+        // Buy Now: add product to cart and open checkout
         function buyNow() {
-            alert("Buy Now / checkout functionality is not connected yet.");
+
+            addToCart(true);
+
         }
 
+
+        // Load product details from Flask API
         async function loadProductDetails() {
-            if (!productId ||
+
+            if (
+                !productId ||
                 !Number.isInteger(Number(productId)) ||
-                Number(productId) < 1) {
+                Number(productId) < 1
+            ) {
+
                 statusElement.textContent = "Valid product ID is required.";
+
                 offerCount.textContent = "Total Offers: 0";
                 offerList.innerHTML = "";
+
+                colorCount.textContent = "Total Colors: 0";
+                colorList.innerHTML = "";
+
                 return;
             }
 
             try {
+
+                // Fetch product details using product ID
                 const response = await fetch(
                     `/api/product-details?product_id=${encodeURIComponent(productId)}`
                 );
 
                 if (!response.ok) {
+
                     throw new Error("Product could not be loaded.");
+
                 }
 
                 const product = await response.json();
 
                 if (product.error) {
+
                     throw new Error(product.error);
+
                 }
 
                 statusElement.textContent = "";
 
+                // Display product information
                 productDetails.innerHTML = `
+
                     <div class="product-card">
+
                         <div>
+
                             <img
                                 class="product-image"
                                 src="${escapeHtml(product.image || "")}"
                                 alt="${escapeHtml(product.name || "Product")}"
                                 onerror="this.style.display='none'"
                             >
+
                         </div>
 
                         <div class="product-info">
+
                             <h1>${escapeHtml(product.name)}</h1>
 
                             <p>
@@ -392,7 +498,9 @@
                                 ${escapeHtml(product.category || "Not specified")}
                             </p>
 
-                            <p class="price">${formatPrice(product.price)}</p>
+                            <p class="price">
+                                ${formatPrice(product.price)}
+                            </p>
 
                             <p class="description">
                                 ${escapeHtml(
@@ -402,12 +510,21 @@
                             </p>
 
                             <div class="cart-controls">
-                                <label for="quantity">Quantity:</label>
+
+                                <label for="quantity">
+                                    Quantity:
+                                </label>
 
                                 <select id="quantity">
+
                                     ${Array.from({ length: 10 }, (_, i) =>
-                                        `<option value="${i + 1}">${i + 1}</option>`
+
+                                        `<option value="${i + 1}">
+                                            ${i + 1}
+                                        </option>`
+
                                     ).join("")}
+
                                 </select>
 
                                 <button
@@ -423,46 +540,75 @@
 
                                 <button
                                     type="button"
+                                    id="buyNowButton"
                                     class="buy-now-btn"
                                     onclick="buyNow()"
                                 >
                                     Buy Now
                                 </button>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 `;
 
+
+                // Get product colors from API response
                 const colors = Array.isArray(product.colors)
                     ? product.colors
                     : (product.colors?.items || []);
 
                 const colorNames = colors.map(color =>
+
                     typeof color === "string"
                         ? color
                         : color.color_name
+
                 ).filter(Boolean);
 
-                colorCount.textContent = "Total Colors: " + colorNames.length;
+
+                // Display available colors
+                colorCount.textContent =
+                    "Total Colors: " + colorNames.length;
 
                 colorList.innerHTML = colorNames.length
+
                     ? colorNames.map(color => `
-                        <div class="color-item">${escapeHtml(color)}</div>
+
+                        <div class="color-item">
+                            ${escapeHtml(color)}
+                        </div>
+
                     `).join("")
+
                     : "<p>No colors available.</p>";
 
+
+                // Display available offers
                 displayOffers(product.offers);
 
             } catch (error) {
+
                 statusElement.textContent = error.message;
+
                 offerCount.textContent = "Total Offers: 0";
                 offerList.innerHTML = "";
+
                 colorCount.textContent = "Total Colors: 0";
                 colorList.innerHTML = "";
+
             }
         }
 
+
+        // Load product details when the page opens
         loadProductDetails();
+
     </script>
+
 </body>
+
 </html>

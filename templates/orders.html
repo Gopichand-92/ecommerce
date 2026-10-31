@@ -1,0 +1,484 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 25px;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: auto;
+        }
+
+        h2 {
+            color: #222;
+        }
+
+        .order-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .order-header {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+
+        .product {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .product img {
+            width: 90px;
+            height: 100px;
+            object-fit: contain;
+        }
+
+        .product-details {
+            flex: 1;
+        }
+
+        .order-total {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .status {
+            color: #b7791f;
+            font-weight: bold;
+        }
+
+        .empty {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 12px 22px;
+            background: #222;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        /* Cancel Order Button */
+        .cancel-btn {
+            background: #dc3545;
+            margin-top: 5px;
+        }
+
+        .cancel-btn:hover {
+            background: #b02a37;
+        }
+
+        .cancel-btn:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .message {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .product {
+                gap: 12px;
+            }
+
+            .product img {
+                width: 75px;
+                height: 85px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>My Orders</h2>
+
+    <!-- SECTION 1: Display all orders -->
+    <div id="ordersContainer">
+        Loading orders...
+    </div>
+
+    <!-- SECTION 2: Continue Shopping -->
+    <button onclick="window.location.href='/search_products_page'">
+        Continue Shopping
+    </button>
+
+</div>
+
+<script>
+
+    // Current test user ID
+    // Later, get this from the logged-in user's session
+    const userId = 2;
+
+
+    // ==========================================
+    // SECTION 1: GET USER ORDERS
+    // ==========================================
+
+    async function loadOrders() {
+
+        const container = document.getElementById("ordersContainer");
+
+        try {
+
+            // Fetch all orders for this user
+            const response = await fetch(`/get_orders/${userId}`);
+
+            const responseText = await response.text();
+
+            console.log("Orders API Status:", response.status);
+            console.log("Orders API Response:", responseText);
+
+            // Convert response into JSON
+            let data;
+
+            try {
+
+                data = JSON.parse(responseText);
+
+            }
+            catch (error) {
+
+                throw new Error(
+                    "Backend did not return valid JSON. Check the Flask route."
+                );
+
+            }
+
+            // Check HTTP response
+            if (!response.ok) {
+
+                throw new Error(
+                    data.error ||
+                    data.message ||
+                    `HTTP Error: ${response.status}`
+                );
+
+            }
+
+            // Check whether orders exist
+            if (!data.orders || data.orders.length === 0) {
+
+                container.innerHTML = "";
+
+                const emptyMessage = document.createElement("div");
+                emptyMessage.className = "empty";
+                emptyMessage.textContent =
+                    data.message || "No orders found.";
+
+                container.appendChild(emptyMessage);
+
+                return;
+            }
+
+            container.innerHTML = "";
+
+            // Display each order
+            for (const order of data.orders) {
+
+                const orderCard = document.createElement("div");
+                orderCard.className = "order-card";
+
+                const header = document.createElement("div");
+                header.className = "order-header";
+
+                const orderId = document.createElement("h3");
+                orderId.textContent =
+                    `Order ID: ${order.order_id}`;
+
+                const address = document.createElement("p");
+                address.textContent =
+                    `Delivery Address: ${order.delivery_address}`;
+
+                const payment = document.createElement("p");
+                payment.textContent =
+                    `Payment Method: ${order.payment_method}`;
+
+                const paymentStatus = document.createElement("p");
+                paymentStatus.className = "status";
+                paymentStatus.textContent =
+                    `Payment Status: ${order.payment_status}`;
+
+                const orderStatus = document.createElement("p");
+                orderStatus.textContent =
+                    `Order Status: ${order.order_status}`;
+
+                const total = document.createElement("p");
+                total.className = "order-total";
+                total.textContent =
+                    `Total Amount: ₹${Number(order.total_amount).toFixed(2)}`;
+
+                header.append(
+                    orderId,
+                    address,
+                    payment,
+                    paymentStatus,
+                    orderStatus,
+                    total
+                );
+
+                // ==========================================
+                // SECTION 2: CANCEL ORDER BUTTON
+                // ==========================================
+
+                if (
+                    String(order.order_status).toLowerCase() === "placed"
+                ) {
+
+                    const cancelButton = document.createElement("button");
+
+                    cancelButton.className = "cancel-btn";
+                    cancelButton.textContent = "Cancel Order";
+
+                    cancelButton.addEventListener("click", function () {
+
+                        cancelOrder(order.order_id, cancelButton);
+
+                    });
+
+                    header.appendChild(cancelButton);
+
+                }
+
+                orderCard.appendChild(header);
+
+
+                // ==========================================
+                // SECTION 3: GET PRODUCTS FOR EACH ORDER
+                // ==========================================
+
+                const detailsResponse = await fetch(
+                    `/get_order_details/${order.order_id}/${userId}`
+                );
+
+                const detailsText = await detailsResponse.text();
+
+                console.log(
+                    `Order ${order.order_id} Details Status:`,
+                    detailsResponse.status
+                );
+
+                console.log(
+                    `Order ${order.order_id} Details Response:`,
+                    detailsText
+                );
+
+                let detailsData;
+
+                try {
+
+                    detailsData = JSON.parse(detailsText);
+
+                }
+                catch (error) {
+
+                    throw new Error(
+                        `Invalid response while loading order ${order.order_id} details.`
+                    );
+
+                }
+
+                if (!detailsResponse.ok) {
+
+                    throw new Error(
+                        detailsData.error ||
+                        detailsData.message ||
+                        `Unable to load order ${order.order_id} details.`
+                    );
+
+                }
+
+
+                // Display purchased products
+                if (detailsData.order_items) {
+
+                    detailsData.order_items.forEach(item => {
+
+                        const product = document.createElement("div");
+                        product.className = "product";
+
+                        const image = document.createElement("img");
+                        image.src = item.product_image || "";
+                        image.alt = item.product_name;
+
+                        const productDetails =
+                            document.createElement("div");
+
+                        productDetails.className = "product-details";
+
+                        const name = document.createElement("h3");
+                        name.textContent = item.product_name;
+
+                        const price = document.createElement("p");
+                        price.textContent =
+                            `Price: ₹${item.product_price}`;
+
+                        const quantity = document.createElement("p");
+                        quantity.textContent =
+                            `Quantity: ${item.quantity}`;
+
+                        productDetails.append(
+                            name,
+                            price,
+                            quantity
+                        );
+
+                        product.append(
+                            image,
+                            productDetails
+                        );
+
+                        orderCard.appendChild(product);
+
+                    });
+
+                }
+
+                container.appendChild(orderCard);
+
+            }
+
+        }
+        catch (error) {
+
+            container.innerHTML = "";
+
+            const errorMessage = document.createElement("div");
+            errorMessage.className = "message";
+            errorMessage.textContent = error.message;
+
+            container.appendChild(errorMessage);
+
+            console.error("Orders loading error:", error);
+
+        }
+
+    }
+
+
+    // ==========================================
+    // SECTION 4: CANCEL ORDER
+    // ==========================================
+
+    async function cancelOrder(orderId, button) {
+
+        // Ask user for confirmation
+        const confirmation = confirm(
+            `Are you sure you want to cancel Order ID: ${orderId}?`
+        );
+
+        if (!confirmation) {
+            return;
+        }
+
+        try {
+
+            // Prevent multiple clicks
+            button.disabled = true;
+            button.textContent = "Cancelling...";
+
+            // Call cancellation API
+            const response = await fetch(
+                `/cancel_order/${userId}/${orderId}`,
+                {
+                    method: "PUT"
+                }
+            );
+
+            const responseText = await response.text();
+
+            let data;
+
+            try {
+
+                data = JSON.parse(responseText);
+
+            }
+            catch (error) {
+
+                throw new Error("Invalid response from cancellation API.");
+
+            }
+
+            // Check API response
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message || "Unable to cancel order."
+                );
+
+            }
+
+            // Show success message
+            alert(data.message);
+
+            // Reload orders to update order status
+            await loadOrders();
+
+        }
+        catch (error) {
+
+            alert(error.message);
+
+            console.error("Cancel order error:", error);
+
+            button.disabled = false;
+            button.textContent = "Cancel Order";
+
+        }
+
+    }
+
+
+    // ==========================================
+    // SECTION 5: LOAD ORDERS WHEN PAGE OPENS
+    // ==========================================
+
+    loadOrders();
+
+</script>
+
+</body>
+</html>

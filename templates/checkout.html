@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Summary | Checkout</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 25px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        h2 {
+            color: #222;
+        }
+
+        .product {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid #ddd;
+            padding: 15px 0;
+        }
+
+        .product img {
+            width: 100px;
+            height: 110px;
+            object-fit: contain;
+        }
+
+        .product-details {
+            flex: 1;
+        }
+
+        .section {
+            margin-top: 25px;
+        }
+
+        textarea {
+            display: block;
+            width: 100%;
+            min-height: 130px;
+            padding: 12px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            background-color: white;
+            color: #222;
+        }
+
+        textarea::placeholder {
+            color: #777;
+            opacity: 1;
+        }
+
+        .total {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        button {
+            background: #222;
+            color: white;
+            border: none;
+            padding: 13px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 15px;
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>Order Summary</h2>
+
+    <div id="cartProducts">
+        Loading products...
+    </div>
+
+    <div class="total">
+        Total Amount: ₹<span id="totalAmount">0.00</span>
+    </div>
+
+    <div class="section">
+
+        <h3>Delivery Address</h3>
+
+        <textarea
+            id="deliveryAddress"
+            name="delivery_address"
+            rows="4"
+            placeholder="Enter your complete delivery address"></textarea>
+
+    </div>
+
+    <div class="section">
+
+        <h3>Payment Method</h3>
+
+        <label>
+            <input
+                type="radio"
+                name="payment"
+                value="COD"
+                checked>
+            Cash on Delivery
+        </label>
+
+        <br><br>
+
+        <label>
+            <input
+                type="radio"
+                name="payment"
+                value="ONLINE"
+                disabled>
+            Online Payment (Coming Soon)
+        </label>
+
+    </div>
+
+    <button id="placeOrderButton" onclick="placeOrder()">
+        Place Order
+    </button>
+
+    <div id="message" class="message"></div>
+
+</div>
+
+<script>
+
+    // Current test user ID
+    const userId = 2;
+
+    // ==========================================
+    // LOAD CHECKOUT DETAILS
+    // ==========================================
+
+    async function loadCheckout() {
+
+        try {
+
+            const response = await fetch(`/api/checkout/${userId}`);
+
+            const data = await response.json();
+
+            const cartProducts = document.getElementById("cartProducts");
+
+            if (!data.cart || data.cart.length === 0) {
+
+                cartProducts.textContent = data.message;
+
+                document.getElementById("placeOrderButton").disabled = true;
+
+                document.getElementById("totalAmount").textContent = "0.00";
+
+                return;
+            }
+
+            cartProducts.innerHTML = "";
+
+            data.cart.forEach(product => {
+
+                const productDiv = document.createElement("div");
+                productDiv.className = "product";
+
+                const image = document.createElement("img");
+                image.src = product.product_image;
+                image.alt = product.product_name;
+
+                const details = document.createElement("div");
+                details.className = "product-details";
+
+                const name = document.createElement("h3");
+                name.textContent = product.product_name;
+
+                const price = document.createElement("p");
+                price.textContent = `Price: ₹${product.product_price}`;
+
+                const quantity = document.createElement("p");
+                quantity.textContent = `Quantity: ${product.quantity}`;
+
+                details.append(name, price, quantity);
+                productDiv.append(image, details);
+
+                cartProducts.appendChild(productDiv);
+
+            });
+
+            document.getElementById("totalAmount").textContent =
+                Number(data.total_amount).toFixed(2);
+
+        }
+        catch (error) {
+
+            document.getElementById("message").textContent =
+                "Unable to load checkout details.";
+
+            console.error(error);
+        }
+    }
+
+
+    // ==========================================
+    // PLACE ORDER
+    // ==========================================
+
+    async function placeOrder() {
+
+        const deliveryAddress =
+            document.getElementById("deliveryAddress").value.trim();
+
+        const paymentMethod =
+            document.querySelector('input[name="payment"]:checked').value;
+
+        if (!deliveryAddress) {
+
+            document.getElementById("message").textContent =
+                "Please enter your delivery address.";
+
+            return;
+        }
+
+        const button = document.getElementById("placeOrderButton");
+
+        button.disabled = true;
+
+        try {
+
+            const response = await fetch("/place_order", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    user_id: userId,
+                    delivery_address: deliveryAddress,
+                    payment_method: paymentMethod
+
+                })
+
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.error || data.message || "Unable to place order"
+                );
+            }
+
+            // Redirect to My Orders after successful order placement
+            window.location.href = `/orders/${userId}`;
+
+        }
+        catch (error) {
+
+            document.getElementById("message").textContent =
+                error.message;
+
+            button.disabled = false;
+        }
+    }
+
+
+    // Load checkout information when page opens
+    loadCheckout();
+
+</script>
+
+</body>
+</html>

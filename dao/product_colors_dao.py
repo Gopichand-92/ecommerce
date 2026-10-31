@@ -1,6 +1,4 @@
 import mysql.connector
-
-
 def get_colors(product_id):
     conn = mysql.connector.connect(
         host="localhost",
@@ -24,5 +22,4 @@ def get_colors(product_id):
 
     cursor.close()
     conn.close()
-
     return colors
