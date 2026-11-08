@@ -1,7 +1,7 @@
 
 from flask import jsonify
 
-from service.cart_service import (
+from services.cart_service import (
     add_to_cart as add_to_cart_service,
     get_cart as get_cart_service,
     update_cart_item as update_cart_item_service,

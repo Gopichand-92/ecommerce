@@ -1,5 +1,5 @@
 from flask import jsonify, request
-from service import product_service
+from services import product_service
 
 
 def get_products_with_offers():

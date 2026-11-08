@@ -1,6 +1,6 @@
 from flask import request, jsonify
  
-from service.product_details_service import get_product_details as get_product_details_service
+from services.product_details_service import get_product_details as get_product_details_service
  
  
 def get_product_details(product_id):

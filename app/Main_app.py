@@ -1,9 +1,8 @@
-
 from flask import Flask, jsonify, request, render_template
 from controllers.product_colors_controller import get_colors
 from repositories import product_repository
-from service import product_service
-from service.product_details_service import get_product_details
+from services import product_service
+from services.product_details_service import get_product_details
 from controllers.cart_controller import (add_to_cart,get_cart,update_cart_item,remove_cart_item)
 from controllers.order_controller import (
     get_checkout as get_checkout_controller,

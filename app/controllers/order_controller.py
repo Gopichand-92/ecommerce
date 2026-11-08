@@ -1,7 +1,7 @@
 
 from flask import jsonify
 
-from service.order_service import (
+from services.order_service import (
     get_checkout as get_checkout_service,
     place_order as place_order_service,
     get_user_orders as get_user_orders_service,
